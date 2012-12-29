@@ -25,7 +25,7 @@ Parse parses a RDB file from `r` and calls the parse hooks on `p`.
 
 ```go
 type Parser interface {
-    // StartRDB is called when parsing starts of a valid RDB file
+  	// StartRDB is called when parsing of a valid RDB file starts.
     StartRDB()
     // StartDatabase is called before database n is started.
     // Once a database starts, another database will not start until EndDatabase is called.

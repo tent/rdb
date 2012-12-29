@@ -15,7 +15,7 @@ import (
 
 // A Parser must be implemented to parse a RDB file.
 type Parser interface {
-	// StartRDB is called when parsing starts of a valid RDB file
+	// StartRDB is called when parsing of a valid RDB file starts.
 	StartRDB()
 	// StartDatabase is called before database n is started.
 	// Once a database starts, another database will not start until EndDatabase is called.
