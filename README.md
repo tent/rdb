@@ -17,10 +17,9 @@ go get github.com/titanous/rdb
 
 ```go
 func Parse(r io.Reader, i Parser) error
-```
+
 ```
 Parse parses a RDB file from r and calls the parse hooks on a Parser.
-```
 
 ## Types
 
@@ -63,6 +62,5 @@ type Parser interface {
     EndRDB()
 }
 ```
-```
+
 A Parser must be implemented to parse a RDB file.
-```
