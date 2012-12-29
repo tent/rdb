@@ -22,25 +22,29 @@ type Parser interface {
 	StartDatabase(n int)
 	// Set is called once for each string key.
 	Set(key, value []byte, expiry int64)
-	// StartHash is called at the beginning of a hash. Hset will be called exactly length times before EndHash.
+	// StartHash is called at the beginning of a hash.
+	// Hset will be called exactly length times before EndHash.
 	StartHash(key []byte, length, expiry int64)
 	// Hset is called once for each field=value pair in a hash.
 	Hset(key, field, value []byte)
 	// EndHash is called when there are no more fields in a hash.
 	EndHash(key []byte)
-	// StartSet is called at the beginning of a set. Sadd will be called exactly cardinality times before EndSet.
+	// StartSet is called at the beginning of a set.
+	// Sadd will be called exactly cardinality times before EndSet.
 	StartSet(key []byte, cardinality, expiry int64)
 	// Sadd is called once for each member of a set.
 	Sadd(key, member []byte)
 	// EndSet is called when there are no more fields in a set.
 	EndSet(key []byte)
-	// StartList is called at the beginning of a list. Rpush will be called exactly length times before EndList.
+	// StartList is called at the beginning of a list.
+	// Rpush will be called exactly length times before EndList.
 	StartList(key []byte, length, expiry int64)
 	// Rpush is called once for each value in a list.
 	Rpush(key, value []byte)
 	// EndList is called when there are no more values in a list.
 	EndList(key []byte)
-	// StartZSet is called at the beginning of a sorted set. Zadd will be called exactly cardinality times before EndZSet.
+	// StartZSet is called at the beginning of a sorted set.
+	// Zadd will be called exactly cardinality times before EndZSet.
 	StartZSet(key []byte, cardinality, expiry int64)
 	// Zadd is called once for each member of a sorted set.
 	Zadd(key []byte, score float64, member []byte)
