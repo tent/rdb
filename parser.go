@@ -52,10 +52,10 @@ type Parser interface {
 	EndRDB()
 }
 
-// Parse parses a RDB file from r and calls the parse hooks on a Parser.
-func Parse(r io.Reader, i Parser) error {
-	p := &parse{i, make([]byte, 8), bufio.NewReader(r)}
-	return p.parse()
+// Parse parses a RDB file from r and calls the parse hooks on p.
+func Parse(r io.Reader, p Parser) error {
+	parser := &parse{p, make([]byte, 8), bufio.NewReader(r)}
+	return parser.parse()
 }
 
 type parse struct {

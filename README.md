@@ -16,10 +16,10 @@ go get github.com/titanous/rdb
 ## Functions
 
 ```go
-func Parse(r io.Reader, i Parser) error
-
+func Parse(r io.Reader, p Parser) error
 ```
-Parse parses a RDB file from r and calls the parse hooks on a Parser.
+
+Parse parses a RDB file from `r` and calls the parse hooks on `p`.
 
 ## Types
 
