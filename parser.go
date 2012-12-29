@@ -17,7 +17,7 @@ import (
 type Parser interface {
 	// StartRDB is called when parsing of a valid RDB file starts.
 	StartRDB()
-	// StartDatabase is called before database n is started.
+	// StartDatabase is called when database n starts.
 	// Once a database starts, another database will not start until EndDatabase is called.
 	StartDatabase(n int)
 	// Set is called once for each string key.
