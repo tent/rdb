@@ -119,7 +119,6 @@ func (p *parse) parse() error {
 	var db uint32
 	var expiry int64
 	firstDB := true
-PARSE:
 	for {
 		objType, err := p.r.ReadByte()
 		if err != nil {
@@ -147,11 +146,10 @@ PARSE:
 				return err
 			}
 			p.event.StartDatabase(int(db))
-			continue PARSE
 		case rdbFlagEOF:
 			p.event.EndDatabase(int(db))
 			p.event.EndRDB()
-			break PARSE
+			return nil
 		default:
 			err = p.readObject(objType, expiry)
 			if err != nil {
@@ -160,7 +158,7 @@ PARSE:
 		}
 	}
 
-	return nil
+	panic("not reached")
 }
 
 func (p *parse) readObject(typ byte, expiry int64) error {
