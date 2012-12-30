@@ -1,4 +1,4 @@
-# rdb
+# rdb [![Build Status](https://travis-ci.org/titanous/rdb.png?branch=master)](https://travis-ci.org/titanous/rdb)
 
 rdb is a Go package that implements parsing of the [Redis](http://redis.io) [RDB
 file format](https://github.com/sripathikrishnan/redis-rdb-tools/blob/master/docs/RDB_File_Format.textile).
