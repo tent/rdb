@@ -1,1 +1,4 @@
 language: go
+before_install:
+  - sudo apt-get install bzr
+  - go get launchpad.net/gocheck
