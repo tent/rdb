@@ -151,7 +151,11 @@ func (p *parse) parse() error {
 			p.event.EndRDB()
 			return nil
 		default:
-			err = p.readObject(objType, expiry)
+			key, err := p.readString()
+			if err != nil {
+				return err
+			}
+			err = p.readObject(key, objType, expiry)
 			if err != nil {
 				return err
 			}
@@ -161,11 +165,7 @@ func (p *parse) parse() error {
 	panic("not reached")
 }
 
-func (p *parse) readObject(typ byte, expiry int64) error {
-	key, err := p.readString()
-	if err != nil {
-		return err
-	}
+func (p *parse) readObject(key []byte, typ byte, expiry int64) error {
 	switch typ {
 	case rdbTypeString:
 		value, err := p.readString()
