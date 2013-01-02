@@ -248,7 +248,7 @@ func (p *parse) readObject(key []byte, typ byte, expiry int64) error {
 	case rdbTypeHashZiplist:
 		return p.readZiplistHash(key, expiry)
 	default:
-		return fmt.Errorf("Unknown object type %d for key %s", typ, key)
+		return fmt.Errorf("rdb: unknown object type %d for key %s", typ, key)
 	}
 	return nil
 }
@@ -338,7 +338,7 @@ func readZipmapItemLength(buf *sliceBuffer, readFree bool) (int, int, error) {
 		}
 		return int(binary.BigEndian.Uint32(s)), int(s[4]), nil
 	case 254:
-		return 0, 0, fmt.Errorf("invalid zipmap item length")
+		return 0, 0, fmt.Errorf("rdb: invalid zipmap item length")
 	case 255:
 		return -1, 0, nil
 	}
@@ -498,7 +498,7 @@ func readZiplistEntry(buf *sliceBuffer) ([]byte, error) {
 		return []byte(strconv.FormatInt(int64(header&0x0f)-1, 10)), nil
 	}
 
-	return nil, fmt.Errorf("unknown ziplist header byte: %d", header)
+	return nil, fmt.Errorf("rdb: unknown ziplist header byte: %d", header)
 }
 
 func (p *parse) readIntset(key []byte, expiry int64) error {
@@ -514,7 +514,7 @@ func (p *parse) readIntset(key []byte, expiry int64) error {
 	intSize := binary.LittleEndian.Uint32(intSizeBytes)
 
 	if intSize != 2 && intSize != 4 && intSize != 8 {
-		return fmt.Errorf("unknown intset encoding: %d", intSize)
+		return fmt.Errorf("rdb: unknown intset encoding: %d", intSize)
 	}
 
 	lenBytes, err := buf.Slice(4)
@@ -552,12 +552,12 @@ func (p *parse) checkHeader() error {
 	}
 
 	if !bytes.Equal(header[:5], []byte("REDIS")) {
-		return fmt.Errorf("Invalid file format")
+		return fmt.Errorf("rdb: invalid file format")
 	}
 
 	version, _ := strconv.ParseInt(string(header[5:]), 10, 64)
 	if version < 1 || version > 6 {
-		return fmt.Errorf("Invalid RDB version number %d", version)
+		return fmt.Errorf("rdb: invalid RDB version number %d", version)
 	}
 
 	return nil
