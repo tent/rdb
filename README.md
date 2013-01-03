@@ -21,6 +21,14 @@ func Parse(r io.Reader, p Parser) error
 
 Parse parses a RDB file from `r` and calls the parse hooks on `p`.
 
+```go
+func ParseDump(dump []byte, db int, key []byte, expiry int64, p Parser) error
+```
+
+Parse a byte slice from the Redis DUMP command. The dump does not contain the
+database, key or expiry, so they must be included in the function call (but can
+be zero values).
+
 ## Types
 
 ```go

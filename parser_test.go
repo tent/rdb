@@ -160,6 +160,15 @@ func (s *ParserSuite) TestRDBv5(c *C) {
 	c.Assert(r.dbs[0]["longerstring"], Equals, "thisisalongerstring.idontknowwhatitmeans")
 }
 
+func (s *ParserSuite) TestDumpParser(c *C) {
+	r := &FakeRedis{}
+	err := ParseDump([]byte("\u0000\xC0\n\u0006\u0000\xF8r?\xC5\xFB\xFB_("), 1, []byte("test"), 123, r)
+	if err != nil {
+		c.Error(err)
+	}
+	c.Assert(r.dbs[1]["test"], Equals, "10")
+}
+
 func parseRDB(name string) *FakeRedis {
 	r := &FakeRedis{}
 	f, err := os.Open("fixtures/" + name + ".rdb")
