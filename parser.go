@@ -11,6 +11,8 @@ import (
 	"io"
 	"math"
 	"strconv"
+
+	"github.com/titanous/rdb/crc64"
 )
 
 // A Parser must be implemented to parse a RDB file.
@@ -740,7 +742,7 @@ func verifyDump(d []byte) error {
 		return fmt.Errorf("rdb: invalid version %d, expecting 6", version)
 	}
 
-	if binary.LittleEndian.Uint64(d[len(d)-8:]) != crc64(d[:len(d)-8]) {
+	if binary.LittleEndian.Uint64(d[len(d)-8:]) != crc64.Digest(d[:len(d)-8]) {
 		return fmt.Errorf("rdb: invalid CRC checksum")
 	}
 
