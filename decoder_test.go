@@ -12,19 +12,19 @@ import (
 // Hook gocheck into the gotest runner.
 func Test(t *testing.T) { TestingT(t) }
 
-type ParserSuite struct{}
+type DecoderSuite struct{}
 
-var _ = Suite(&ParserSuite{})
+var _ = Suite(&DecoderSuite{})
 
-func (s *ParserSuite) TestEmptyRDB(c *C) {
-	r := parseRDB("empty_database")
+func (s *DecoderSuite) TestEmptyRDB(c *C) {
+	r := decodeRDB("empty_database")
 	c.Assert(r.started, Equals, 1)
 	c.Assert(r.ended, Equals, 1)
 	c.Assert(len(r.dbs), Equals, 0)
 }
 
-func (s *ParserSuite) TestMultipleDatabases(c *C) {
-	r := parseRDB("multiple_databases")
+func (s *DecoderSuite) TestMultipleDatabases(c *C) {
+	r := decodeRDB("multiple_databases")
 	c.Assert(len(r.dbs), Equals, 2)
 	_, ok := r.dbs[1]
 	c.Assert(ok, Equals, false)
@@ -32,13 +32,13 @@ func (s *ParserSuite) TestMultipleDatabases(c *C) {
 	c.Assert(r.dbs[2]["key_in_second_database"], Equals, "second")
 }
 
-func (s *ParserSuite) TestExpiry(c *C) {
-	r := parseRDB("keys_with_expiry")
+func (s *DecoderSuite) TestExpiry(c *C) {
+	r := decodeRDB("keys_with_expiry")
 	c.Assert(r.expiries[0]["expires_ms_precision"], Equals, int64(1671963072573))
 }
 
-func (s *ParserSuite) TestIntegerKeys(c *C) {
-	r := parseRDB("integer_keys")
+func (s *DecoderSuite) TestIntegerKeys(c *C) {
+	r := decodeRDB("integer_keys")
 	c.Assert(r.dbs[0]["125"], Equals, "Positive 8 bit integer")
 	c.Assert(r.dbs[0]["43947"], Equals, "Positive 16 bit integer")
 	c.Assert(r.dbs[0]["183358245"], Equals, "Positive 32 bit integer")
@@ -47,28 +47,28 @@ func (s *ParserSuite) TestIntegerKeys(c *C) {
 	c.Assert(r.dbs[0]["-183358245"], Equals, "Negative 32 bit integer")
 }
 
-func (s *ParserSuite) TestStringKeyWithCompression(c *C) {
-	r := parseRDB("easily_compressible_string_key")
+func (s *DecoderSuite) TestStringKeyWithCompression(c *C) {
+	r := decodeRDB("easily_compressible_string_key")
 	c.Assert(r.dbs[0][strings.Repeat("a", 200)], Equals, "Key that redis should compress easily")
 }
 
-func (s *ParserSuite) TestZipmapWithCompression(c *C) {
-	r := parseRDB("zipmap_that_compresses_easily")
+func (s *DecoderSuite) TestZipmapWithCompression(c *C) {
+	r := decodeRDB("zipmap_that_compresses_easily")
 	zm := r.dbs[0]["zipmap_compresses_easily"].(map[string]string)
 	c.Assert(zm["a"], Equals, "aa")
 	c.Assert(zm["aa"], Equals, "aaaa")
 	c.Assert(zm["aaaaa"], Equals, "aaaaaaaaaaaaaa")
 }
 
-func (s *ParserSuite) TestZipmap(c *C) {
-	r := parseRDB("zipmap_that_doesnt_compress")
+func (s *DecoderSuite) TestZipmap(c *C) {
+	r := decodeRDB("zipmap_that_doesnt_compress")
 	zm := r.dbs[0]["zimap_doesnt_compress"].(map[string]string)
 	c.Assert(zm["MKD1G6"], Equals, "2")
 	c.Assert(zm["YNNXK"], Equals, "F7TI")
 }
 
-func (s *ParserSuite) TestZipmapWitBigValues(c *C) {
-	r := parseRDB("zipmap_with_big_values")
+func (s *DecoderSuite) TestZipmapWitBigValues(c *C) {
+	r := decodeRDB("zipmap_with_big_values")
 	zm := r.dbs[0]["zipmap_with_big_values"].(map[string]string)
 	c.Assert(len(zm["253bytes"]), Equals, 253)
 	c.Assert(len(zm["254bytes"]), Equals, 254)
@@ -77,82 +77,82 @@ func (s *ParserSuite) TestZipmapWitBigValues(c *C) {
 	c.Assert(len(zm["20kbytes"]), Equals, 20000)
 }
 
-func (s *ParserSuite) TestHashZiplist(c *C) {
-	r := parseRDB("hash_as_ziplist")
+func (s *DecoderSuite) TestHashZiplist(c *C) {
+	r := decodeRDB("hash_as_ziplist")
 	zm := r.dbs[0]["zipmap_compresses_easily"].(map[string]string)
 	c.Assert(zm["a"], Equals, "aa")
 	c.Assert(zm["aa"], Equals, "aaaa")
 	c.Assert(zm["aaaaa"], Equals, "aaaaaaaaaaaaaa")
 }
 
-func (s *ParserSuite) TestDictionary(c *C) {
-	r := parseRDB("dictionary")
+func (s *DecoderSuite) TestDictionary(c *C) {
+	r := decodeRDB("dictionary")
 	d := r.dbs[0]["force_dictionary"].(map[string]string)
 	c.Assert(len(d), Equals, 1000)
 	c.Assert(d["ZMU5WEJDG7KU89AOG5LJT6K7HMNB3DEI43M6EYTJ83VRJ6XNXQ"], Equals, "T63SOS8DQJF0Q0VJEZ0D1IQFCYTIPSBOUIAI9SB0OV57MQR1FI")
 	c.Assert(d["UHS5ESW4HLK8XOGTM39IK1SJEUGVV9WOPK6JYA5QBZSJU84491"], Equals, "6VULTCV52FXJ8MGVSFTZVAGK2JXZMGQ5F8OVJI0X6GEDDR27RZ")
 }
 
-func (s *ParserSuite) TestZiplistWithCompression(c *C) {
-	r := parseRDB("ziplist_that_compresses_easily")
+func (s *DecoderSuite) TestZiplistWithCompression(c *C) {
+	r := decodeRDB("ziplist_that_compresses_easily")
 	for i, length := range []int{6, 12, 18, 24, 30, 36} {
 		c.Assert(r.dbs[0]["ziplist_compresses_easily"].([]string)[i], Equals, strings.Repeat("a", length))
 	}
 }
 
-func (s *ParserSuite) TestZiplist(c *C) {
-	r := parseRDB("ziplist_that_doesnt_compress")
+func (s *DecoderSuite) TestZiplist(c *C) {
+	r := decodeRDB("ziplist_that_doesnt_compress")
 	l := r.dbs[0]["ziplist_doesnt_compress"].([]string)
 	c.Assert(l[0], Equals, "aj2410")
 	c.Assert(l[1], Equals, "cc953a17a8e096e76a44169ad3f9ac87c5f8248a403274416179aa9fbd852344")
 }
 
-func (s *ParserSuite) TestZiplistWithInts(c *C) {
-	r := parseRDB("ziplist_with_integers")
+func (s *DecoderSuite) TestZiplistWithInts(c *C) {
+	r := decodeRDB("ziplist_with_integers")
 	expected := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "-2", "13", "25", "-61", "63", "16380", "-16000", "65535", "-65523", "4194304", "9223372036854775807"}
 	for i, x := range expected {
 		c.Assert(r.dbs[0]["ziplist_with_integers"].([]string)[i], Equals, x)
 	}
 }
 
-func (s *ParserSuite) TestIntSet16(c *C) {
-	r := parseRDB("intset_16")
+func (s *DecoderSuite) TestIntSet16(c *C) {
+	r := decodeRDB("intset_16")
 	for i, x := range []string{"32764", "32765", "32766"} {
 		c.Assert(r.dbs[0]["intset_16"].([]string)[i], Equals, x)
 	}
 }
 
-func (s *ParserSuite) TestIntSet32(c *C) {
-	r := parseRDB("intset_32")
+func (s *DecoderSuite) TestIntSet32(c *C) {
+	r := decodeRDB("intset_32")
 	for i, x := range []string{"2147418108", "2147418109", "2147418110"} {
 		c.Assert(r.dbs[0]["intset_32"].([]string)[i], Equals, x)
 	}
 }
 
-func (s *ParserSuite) TestIntSet64(c *C) {
-	r := parseRDB("intset_64")
+func (s *DecoderSuite) TestIntSet64(c *C) {
+	r := decodeRDB("intset_64")
 	for i, x := range []string{"9223090557583032316", "9223090557583032317", "9223090557583032318"} {
 		c.Assert(r.dbs[0]["intset_64"].([]string)[i], Equals, x)
 	}
 }
 
-func (s *ParserSuite) TestSet(c *C) {
-	r := parseRDB("regular_set")
+func (s *DecoderSuite) TestSet(c *C) {
+	r := decodeRDB("regular_set")
 	for i, x := range []string{"beta", "delta", "alpha", "phi", "gamma", "kappa"} {
 		c.Assert(r.dbs[0]["regular_set"].([]string)[i], Equals, x)
 	}
 }
 
-func (s *ParserSuite) TestZSetZiplist(c *C) {
-	r := parseRDB("sorted_set_as_ziplist")
+func (s *DecoderSuite) TestZSetZiplist(c *C) {
+	r := decodeRDB("sorted_set_as_ziplist")
 	z := r.dbs[0]["sorted_set_as_ziplist"].(map[string]float64)
 	c.Assert(z["8b6ba6718a786daefa69438148361901"], Equals, float64(1))
 	c.Assert(z["cb7a24bb7528f934b841b34c3a73e0c7"], Equals, float64(2.37))
 	c.Assert(z["523af537946b79c4f8369ed39ba78605"], Equals, float64(3.423))
 }
 
-func (s *ParserSuite) TestRDBv5(c *C) {
-	r := parseRDB("rdb_version_5_with_checksum")
+func (s *DecoderSuite) TestRDBv5(c *C) {
+	r := decodeRDB("rdb_version_5_with_checksum")
 	c.Assert(r.dbs[0]["abcd"], Equals, "efgh")
 	c.Assert(r.dbs[0]["foo"], Equals, "bar")
 	c.Assert(r.dbs[0]["bar"], Equals, "baz")
@@ -160,22 +160,22 @@ func (s *ParserSuite) TestRDBv5(c *C) {
 	c.Assert(r.dbs[0]["longerstring"], Equals, "thisisalongerstring.idontknowwhatitmeans")
 }
 
-func (s *ParserSuite) TestDumpParser(c *C) {
+func (s *DecoderSuite) TestDumpDecoder(c *C) {
 	r := &FakeRedis{}
-	err := ParseDump([]byte("\u0000\xC0\n\u0006\u0000\xF8r?\xC5\xFB\xFB_("), 1, []byte("test"), 123, r)
+	err := DecodeDump([]byte("\u0000\xC0\n\u0006\u0000\xF8r?\xC5\xFB\xFB_("), 1, []byte("test"), 123, r)
 	if err != nil {
 		c.Error(err)
 	}
 	c.Assert(r.dbs[1]["test"], Equals, "10")
 }
 
-func parseRDB(name string) *FakeRedis {
+func decodeRDB(name string) *FakeRedis {
 	r := &FakeRedis{}
 	f, err := os.Open("fixtures/" + name + ".rdb")
 	if err != nil {
 		panic(err)
 	}
-	err = Parse(f, r)
+	err = Decode(f, r)
 	if err != nil {
 		panic(err)
 	}

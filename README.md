@@ -16,23 +16,23 @@ go get github.com/titanous/rdb
 ## Functions
 
 ```go
-func Parse(r io.Reader, p Parser) error
+func Decode(r io.Reader, d Decoder) error
 ```
 
-Parse parses a RDB file from `r` and calls the parse hooks on `p`.
+Decode parses a RDB file from `r` and calls the decode hooks on `d`.
 
 ```go
-func ParseDump(dump []byte, db int, key []byte, expiry int64, p Parser) error
+func DecodeDump(dump []byte, db int, key []byte, expiry int64, d Decoder) error
 ```
 
-Parse a byte slice from the Redis DUMP command. The dump does not contain the
+Decode a byte slice from the Redis DUMP command. The dump does not contain the
 database, key or expiry, so they must be included in the function call (but can
 be zero values).
 
 ## Types
 
 ```go
-type Parser interface {
+type Decoder interface {
     // StartRDB is called when parsing of a valid RDB file starts.
     StartRDB()
     // StartDatabase is called when database n starts.
@@ -75,4 +75,4 @@ type Parser interface {
 }
 ```
 
-A Parser must be implemented to parse a RDB file.
+A Decoder must be implemented to parse a RDB file.
