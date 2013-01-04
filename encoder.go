@@ -69,6 +69,37 @@ func (e *Encoder) EncodeString(s []byte) error {
 	return err
 }
 
+func (e *Encoder) EncodeLength(l uint32) (err error) {
+	switch {
+	case l < 1<<6:
+		_, err = e.w.Write([]byte{byte(l)})
+	case l < 1<<14:
+		_, err = e.w.Write([]byte{byte(l>>8) | rdb14bitLen<<6, byte(l)})
+	default:
+		b := make([]byte, 5)
+		b[0] = rdb32bitLen << 6
+		binary.BigEndian.PutUint32(b[1:], l)
+		_, err = e.w.Write(b)
+	}
+	return
+}
+
+func (e *Encoder) EncodeFloat(f float64) (err error) {
+	switch {
+	case math.IsNaN(f):
+		_, err = e.w.Write([]byte{253})
+	case math.IsInf(f, 1):
+		_, err = e.w.Write([]byte{254})
+	case math.IsInf(f, -1):
+		_, err = e.w.Write([]byte{255})
+	default:
+		b := []byte(strconv.FormatFloat(f, 'g', 17, 64))
+		e.w.Write([]byte{byte(len(b))})
+		_, err = e.w.Write(b)
+	}
+	return
+}
+
 func (e *Encoder) encodeIntString(b []byte) (written bool, err error) {
 	s := string(b)
 	i, err := strconv.ParseInt(s, 10, 32)
@@ -96,19 +127,4 @@ func (e *Encoder) encodeIntString(b []byte) (written bool, err error) {
 		return
 	}
 	return true, err
-}
-
-func (e *Encoder) EncodeLength(l uint32) (err error) {
-	switch {
-	case l < 1<<6:
-		_, err = e.w.Write([]byte{byte(l)})
-	case l < 1<<14:
-		_, err = e.w.Write([]byte{byte(l>>8) | rdb14bitLen<<6, byte(l)})
-	default:
-		b := make([]byte, 5)
-		b[0] = rdb32bitLen << 6
-		binary.BigEndian.PutUint32(b[1:], l)
-		_, err = e.w.Write(b)
-	}
-	return
 }
