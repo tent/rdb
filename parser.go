@@ -77,7 +77,7 @@ func ParseDump(dump []byte, db int, key []byte, expiry int64, p Parser) error {
 	parser.event.StartRDB()
 	parser.event.StartDatabase(db)
 
-	err = parser.readObject(key, dump[0], expiry)
+	err = parser.readObject(key, ValueType(dump[0]), expiry)
 
 	parser.event.EndDatabase(db)
 	parser.event.EndRDB()
@@ -95,6 +95,22 @@ type parse struct {
 	r      byteReader
 }
 
+type ValueType byte
+
+const (
+	TypeString ValueType = 0
+	TypeList   ValueType = 1
+	TypeSet    ValueType = 2
+	TypeZSet   ValueType = 3
+	TypeHash   ValueType = 4
+
+	TypeHashZipmap  ValueType = 9
+	TypeListZiplist ValueType = 10
+	TypeSetIntset   ValueType = 11
+	TypeZSetZiplist ValueType = 12
+	TypeHashZiplist ValueType = 13
+)
+
 const (
 	rdb6bitLen  = 0
 	rdb14bitLen = 1
@@ -105,18 +121,6 @@ const (
 	rdbFlagExpiry   = 0xfd
 	rdbFlagSelectDB = 0xfe
 	rdbFlagEOF      = 0xff
-
-	rdbTypeString = 0
-	rdbTypeList   = 1
-	rdbTypeSet    = 2
-	rdbTypeZSet   = 3
-	rdbTypeHash   = 4
-
-	rdbTypeHashZipmap  = 9
-	rdbTypeListZiplist = 10
-	rdbTypeSetIntset   = 11
-	rdbTypeZSetZiplist = 12
-	rdbTypeHashZiplist = 13
 
 	rdbEncInt8  = 0
 	rdbEncInt16 = 1
@@ -182,7 +186,7 @@ func (p *parse) parse() error {
 			if err != nil {
 				return err
 			}
-			err = p.readObject(key, objType, expiry)
+			err = p.readObject(key, ValueType(objType), expiry)
 			if err != nil {
 				return err
 			}
@@ -192,15 +196,15 @@ func (p *parse) parse() error {
 	panic("not reached")
 }
 
-func (p *parse) readObject(key []byte, typ byte, expiry int64) error {
+func (p *parse) readObject(key []byte, typ ValueType, expiry int64) error {
 	switch typ {
-	case rdbTypeString:
+	case TypeString:
 		value, err := p.readString()
 		if err != nil {
 			return err
 		}
 		p.event.Set(key, value, expiry)
-	case rdbTypeList:
+	case TypeList:
 		length, _, err := p.readLength()
 		if err != nil {
 			return err
@@ -214,7 +218,7 @@ func (p *parse) readObject(key []byte, typ byte, expiry int64) error {
 			p.event.Rpush(key, value)
 		}
 		p.event.EndList(key)
-	case rdbTypeSet:
+	case TypeSet:
 		cardinality, _, err := p.readLength()
 		if err != nil {
 			return err
@@ -228,7 +232,7 @@ func (p *parse) readObject(key []byte, typ byte, expiry int64) error {
 			p.event.Sadd(key, member)
 		}
 		p.event.EndSet(key)
-	case rdbTypeZSet:
+	case TypeZSet:
 		cardinality, _, err := p.readLength()
 		if err != nil {
 			return err
@@ -246,7 +250,7 @@ func (p *parse) readObject(key []byte, typ byte, expiry int64) error {
 			p.event.Zadd(key, score, member)
 		}
 		p.event.EndZSet(key)
-	case rdbTypeHash:
+	case TypeHash:
 		length, _, err := p.readLength()
 		if err != nil {
 			return err
@@ -264,15 +268,15 @@ func (p *parse) readObject(key []byte, typ byte, expiry int64) error {
 			p.event.Hset(key, field, value)
 		}
 		p.event.EndHash(key)
-	case rdbTypeHashZipmap:
+	case TypeHashZipmap:
 		return p.readZipmap(key, expiry)
-	case rdbTypeListZiplist:
+	case TypeListZiplist:
 		return p.readZiplist(key, expiry)
-	case rdbTypeSetIntset:
+	case TypeSetIntset:
 		return p.readIntset(key, expiry)
-	case rdbTypeZSetZiplist:
+	case TypeZSetZiplist:
 		return p.readZiplistZset(key, expiry)
-	case rdbTypeHashZiplist:
+	case TypeHashZiplist:
 		return p.readZiplistHash(key, expiry)
 	default:
 		return fmt.Errorf("rdb: unknown object type %d for key %s", typ, key)
@@ -738,7 +742,7 @@ func verifyDump(d []byte) error {
 		return fmt.Errorf("rdb: invalid dump length")
 	}
 	version := binary.LittleEndian.Uint16(d[len(d)-10:])
-	if version != 6 {
+	if version != uint16(Version) {
 		return fmt.Errorf("rdb: invalid version %d, expecting 6", version)
 	}
 
