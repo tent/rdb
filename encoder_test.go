@@ -1,9 +1,10 @@
-package rdb
+package rdb_test
 
 import (
 	"bytes"
 	"encoding/base64"
 
+	"github.com/titanous/rdb"
 	. "launchpad.net/gocheck"
 )
 
@@ -31,8 +32,8 @@ var stringEncodingTests = []struct {
 func (e *EncoderSuite) TestStringEncoding(c *C) {
 	buf := &bytes.Buffer{}
 	for _, t := range stringEncodingTests {
-		e := NewEncoder(buf)
-		e.EncodeType(TypeString)
+		e := rdb.NewEncoder(buf)
+		e.EncodeType(rdb.TypeString)
 		e.EncodeString([]byte(t.str))
 		e.EncodeDumpFooter()
 		expected, _ := base64.StdEncoding.DecodeString(t.res)

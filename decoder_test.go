@@ -1,4 +1,4 @@
-package rdb
+package rdb_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/titanous/rdb"
 	. "launchpad.net/gocheck"
 )
 
@@ -162,7 +163,7 @@ func (s *DecoderSuite) TestRDBv5(c *C) {
 
 func (s *DecoderSuite) TestDumpDecoder(c *C) {
 	r := &FakeRedis{}
-	err := DecodeDump([]byte("\u0000\xC0\n\u0006\u0000\xF8r?\xC5\xFB\xFB_("), 1, []byte("test"), 123, r)
+	err := rdb.DecodeDump([]byte("\u0000\xC0\n\u0006\u0000\xF8r?\xC5\xFB\xFB_("), 1, []byte("test"), 123, r)
 	if err != nil {
 		c.Error(err)
 	}
@@ -175,7 +176,7 @@ func decodeRDB(name string) *FakeRedis {
 	if err != nil {
 		panic(err)
 	}
-	err = Decode(f, r)
+	err = rdb.Decode(f, r)
 	if err != nil {
 		panic(err)
 	}
