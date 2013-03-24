@@ -12,7 +12,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/titanous/rdb/crc64"
+	"github.com/cupcake/rdb/crc64"
 )
 
 // A Decoder must be implemented to parse a RDB file.
@@ -724,7 +724,7 @@ func (d *decode) readLength() (uint32, bool, error) {
 		}
 		return (uint32(b&0x3f) << 8) | uint32(bb), false, nil
 	case rdbEncVal:
-		// When the first two bits are 11, the next object is encoded. 
+		// When the first two bits are 11, the next object is encoded.
 		// The next 6 bits indicate the encoding type.
 		return uint32(b & 0x3f), true, nil
 	default:

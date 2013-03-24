@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/titanous/rdb"
+	"github.com/cupcake/rdb"
 	. "launchpad.net/gocheck"
 )
 

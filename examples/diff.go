@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/titanous/rdb"
+	"github.com/cupcake/rdb"
 )
 
 type decoder struct {

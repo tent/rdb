@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 
-	"github.com/titanous/rdb"
+	"github.com/cupcake/rdb"
 	. "launchpad.net/gocheck"
 )
 

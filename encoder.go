@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/titanous/rdb/crc64"
+	"github.com/cupcake/rdb/crc64"
 )
 
 var Version = 6
