@@ -1,4 +1,4 @@
-package rdb
+package nopdecoder
 
 // NopDecoder may be embedded in a real Decoder to avoid implementing methods.
 type NopDecoder struct{}

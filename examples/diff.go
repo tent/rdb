@@ -7,12 +7,13 @@ import (
 	"os"
 
 	"github.com/cupcake/rdb"
+	"github.com/cupcake/rdb/nopdecoder"
 )
 
 type decoder struct {
 	db int
 	i  int
-	rdb.NopDecoder
+	nopdecoder.NopDecoder
 }
 
 func (p *decoder) StartDatabase(n int) {
