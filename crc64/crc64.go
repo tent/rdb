@@ -1,9 +1,8 @@
-// Adapted from the Go standard library (http://golang.org/src/pkg/hash/crc64/crc64.go)
-//
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-//
+
+// Package crc64 implements the Jones coefficients with an init value of 0.
 package crc64
 
 import "hash"
