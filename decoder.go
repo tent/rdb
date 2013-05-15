@@ -1,6 +1,4 @@
-// Package rdb implements parsing of the Redis RDB file format.
-//
-// This package is based heavily on redis-rdb-tools by Sripathi Krishnan: https://github.com/sripathikrishnan/redis-rdb-tools
+// Package rdb implements parsing and encoding of the Redis RDB file format.
 package rdb
 
 import (
