@@ -11,7 +11,7 @@ import (
 	"github.com/cupcake/rdb/crc64"
 )
 
-var Version = 6
+const Version = 6
 
 type Encoder struct {
 	w   io.Writer

@@ -743,7 +743,7 @@ func verifyDump(d []byte) error {
 	}
 	version := binary.LittleEndian.Uint16(d[len(d)-10:])
 	if version != uint16(Version) {
-		return fmt.Errorf("rdb: invalid version %d, expecting 6", version)
+		return fmt.Errorf("rdb: invalid version %d, expecting %d", version, Version)
 	}
 
 	if binary.LittleEndian.Uint64(d[len(d)-8:]) != crc64.Digest(d[:len(d)-8]) {
