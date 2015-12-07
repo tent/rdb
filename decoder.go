@@ -188,6 +188,7 @@ func (d *decode) decode() error {
 			if err != nil {
 				return err
 			}
+			expiry = 0
 		}
 	}
 
