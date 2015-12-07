@@ -38,6 +38,15 @@ func (s *DecoderSuite) TestExpiry(c *C) {
 	c.Assert(r.expiries[0]["expires_ms_precision"], Equals, int64(1671963072573))
 }
 
+func (s *DecoderSuite) TestMixedExpiry(c *C) {
+	r := decodeRDB("keys_with_mixed_expiry")
+	c.Assert(r.expiries[0]["key01"], Not(Equals), int64(0))
+	c.Assert(r.expiries[0]["key04"], Not(Equals), int64(0))
+
+	c.Assert(r.expiries[0]["key02"], Equals, int64(0))
+	c.Assert(r.expiries[0]["key03"], Equals, int64(0))
+}
+
 func (s *DecoderSuite) TestIntegerKeys(c *C) {
 	r := decodeRDB("integer_keys")
 	c.Assert(r.dbs[0]["125"], Equals, "Positive 8 bit integer")
