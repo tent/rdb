@@ -170,6 +170,13 @@ func (s *DecoderSuite) TestRDBv5(c *C) {
 	c.Assert(r.dbs[0]["longerstring"], Equals, "thisisalongerstring.idontknowwhatitmeans")
 }
 
+func (s *DecoderSuite) TestRDBv7(c *C) {
+	r := decodeRDB("rdb_v7_list_quicklist")
+	c.Assert(r.aux["redis-ver"], Equals, "3.2.0")
+	c.Assert(r.dbSize[0], Equals, uint32(1))
+	c.Assert(r.expiresSize[0], Equals, uint32(0))
+}
+
 func (s *DecoderSuite) TestDumpDecoder(c *C) {
 	r := &FakeRedis{}
 	err := rdb.DecodeDump([]byte("\u0000\xC0\n\u0006\u0000\xF8r?\xC5\xFB\xFB_("), 1, []byte("test"), 123, r)
@@ -193,13 +200,17 @@ func decodeRDB(name string) *FakeRedis {
 }
 
 type FakeRedis struct {
-	dbs      map[int]map[string]interface{}
-	lengths  map[int]map[string]int
-	expiries map[int]map[string]int64
+	dbs         map[int]map[string]interface{}
+	lengths     map[int]map[string]int
+	expiries    map[int]map[string]int64
+	dbSize      map[int]uint32
+	expiresSize map[int]uint32
 
 	cdb     int
 	started int
 	ended   int
+
+	aux map[string]string
 }
 
 func (r *FakeRedis) setExpiry(key []byte, expiry int64) {
@@ -223,6 +234,9 @@ func (r *FakeRedis) StartRDB() {
 	r.dbs = make(map[int]map[string]interface{})
 	r.expiries = make(map[int]map[string]int64)
 	r.lengths = make(map[int]map[string]int)
+	r.aux = make(map[string]string)
+	r.dbSize = make(map[int]uint32)
+	r.expiresSize = make(map[int]uint32)
 }
 
 func (r *FakeRedis) StartDatabase(n int) {
@@ -313,4 +327,13 @@ func (r *FakeRedis) EndDatabase(n int) {
 
 func (r *FakeRedis) EndRDB() {
 	r.ended++
+}
+
+func (r *FakeRedis) Aux(key, value []byte) {
+	r.aux[string(key)] = string(value)
+}
+
+func (r *FakeRedis) ResizeDatabase(dbSize, expiresSize uint32) {
+	r.dbSize[r.cdb] = dbSize
+	r.expiresSize[r.cdb] = expiresSize
 }
