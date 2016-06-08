@@ -20,6 +20,8 @@ type Decoder interface {
 	// StartDatabase is called when database n starts.
 	// Once a database starts, another database will not start until EndDatabase is called.
 	StartDatabase(n int)
+	// AUX field
+	Aux(key, value []byte)
 	// Set is called once for each string key.
 	Set(key, value []byte, expiry int64)
 	// StartHash is called at the beginning of a hash.
@@ -115,6 +117,7 @@ const (
 	rdb32bitLen = 2
 	rdbEncVal   = 3
 
+	rdbFlagAux      = 0xfa
 	rdbFlagExpiryMS = 0xfc
 	rdbFlagExpiry   = 0xfd
 	rdbFlagSelectDB = 0xfe
@@ -154,6 +157,16 @@ func (d *decode) decode() error {
 			return err
 		}
 		switch objType {
+		case rdbFlagAux:
+			auxKey, err := d.readString()
+			if err != nil {
+				return err
+			}
+			auxVal, err := d.readString()
+			if err != nil {
+				return err
+			}
+			d.event.Aux(auxKey, auxVal)
 		case rdbFlagExpiryMS:
 			_, err := io.ReadFull(d.r, d.intBuf)
 			if err != nil {
