@@ -175,6 +175,10 @@ func (s *DecoderSuite) TestRDBv7(c *C) {
 	c.Assert(r.aux["redis-ver"], Equals, "3.2.0")
 	c.Assert(r.dbSize[0], Equals, uint32(1))
 	c.Assert(r.expiresSize[0], Equals, uint32(0))
+	z := r.dbs[0]["foo"].([]string)
+	c.Assert(z[0], Equals, "bar")
+	c.Assert(z[1], Equals, "baz")
+	c.Assert(z[2], Equals, "boo")
 }
 
 func (s *DecoderSuite) TestDumpDecoder(c *C) {
@@ -288,7 +292,11 @@ func (r *FakeRedis) EndSet(key []byte) {
 func (r *FakeRedis) StartList(key []byte, length, expiry int64) {
 	r.setExpiry(key, expiry)
 	r.setLength(key, length)
-	r.db()[string(key)] = make([]string, 0, length)
+	cap := length
+	if length < 0 {
+		cap = 1
+	}
+	r.db()[string(key)] = make([]string, 0, cap)
 }
 
 func (r *FakeRedis) Rpush(key, value []byte) {
@@ -297,7 +305,7 @@ func (r *FakeRedis) Rpush(key, value []byte) {
 
 func (r *FakeRedis) EndList(key []byte) {
 	actual := len(r.db()[string(key)].([]string))
-	if actual != r.getLength(key) {
+	if actual != r.getLength(key) && r.getLength(key) >= 0 {
 		panic(fmt.Sprintf("wrong length for key %s got %d, expected %d", key, actual, r.getLength(key)))
 	}
 }

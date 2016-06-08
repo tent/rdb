@@ -42,6 +42,7 @@ type Decoder interface {
 	EndSet(key []byte)
 	// StartList is called at the beginning of a list.
 	// Rpush will be called exactly length times before EndList.
+	// If length of the list is not known, then length is -1
 	StartList(key []byte, length, expiry int64)
 	// Rpush is called once for each value in a list.
 	Rpush(key, value []byte)
@@ -106,11 +107,12 @@ const (
 	TypeZSet   ValueType = 3
 	TypeHash   ValueType = 4
 
-	TypeHashZipmap  ValueType = 9
-	TypeListZiplist ValueType = 10
-	TypeSetIntset   ValueType = 11
-	TypeZSetZiplist ValueType = 12
-	TypeHashZiplist ValueType = 13
+	TypeHashZipmap    ValueType = 9
+	TypeListZiplist   ValueType = 10
+	TypeSetIntset     ValueType = 11
+	TypeZSetZiplist   ValueType = 12
+	TypeHashZiplist   ValueType = 13
+	TypeListQuicklist ValueType = 14
 )
 
 const (
@@ -243,6 +245,16 @@ func (d *decode) readObject(key []byte, typ ValueType, expiry int64) error {
 			d.event.Rpush(key, value)
 		}
 		d.event.EndList(key)
+	case TypeListQuicklist:
+		length, _, err := d.readLength()
+		if err != nil {
+			return err
+		}
+		d.event.StartList(key, int64(-1), expiry)
+		for i := uint32(0); i < length; i++ {
+			d.readZiplist(key, 0, false)
+		}
+		d.event.EndList(key)
 	case TypeSet:
 		cardinality, _, err := d.readLength()
 		if err != nil {
@@ -296,7 +308,7 @@ func (d *decode) readObject(key []byte, typ ValueType, expiry int64) error {
 	case TypeHashZipmap:
 		return d.readZipmap(key, expiry)
 	case TypeListZiplist:
-		return d.readZiplist(key, expiry)
+		return d.readZiplist(key, expiry, true)
 	case TypeSetIntset:
 		return d.readIntset(key, expiry)
 	case TypeZSetZiplist:
@@ -405,7 +417,7 @@ func readZipmapItemLength(buf *sliceBuffer, readFree bool) (int, int, error) {
 	return int(b), int(free), err
 }
 
-func (d *decode) readZiplist(key []byte, expiry int64) error {
+func (d *decode) readZiplist(key []byte, expiry int64, addListEvents bool) error {
 	ziplist, err := d.readString()
 	if err != nil {
 		return err
@@ -415,7 +427,9 @@ func (d *decode) readZiplist(key []byte, expiry int64) error {
 	if err != nil {
 		return err
 	}
-	d.event.StartList(key, length, expiry)
+	if addListEvents {
+		d.event.StartList(key, length, expiry)
+	}
 	for i := int64(0); i < length; i++ {
 		entry, err := readZiplistEntry(buf)
 		if err != nil {
@@ -423,7 +437,9 @@ func (d *decode) readZiplist(key []byte, expiry int64) error {
 		}
 		d.event.Rpush(key, entry)
 	}
-	d.event.EndList(key)
+	if addListEvents {
+		d.event.EndList(key)
+	}
 	return nil
 }
 
