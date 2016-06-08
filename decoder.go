@@ -22,6 +22,8 @@ type Decoder interface {
 	StartDatabase(n int)
 	// AUX field
 	Aux(key, value []byte)
+	// ResizeDB hint
+	ResizeDatabase(dbSize, expiresSize uint32)
 	// Set is called once for each string key.
 	Set(key, value []byte, expiry int64)
 	// StartHash is called at the beginning of a hash.
@@ -118,6 +120,7 @@ const (
 	rdbEncVal   = 3
 
 	rdbFlagAux      = 0xfa
+	rdbFlagResizeDB = 0xfb
 	rdbFlagExpiryMS = 0xfc
 	rdbFlagExpiry   = 0xfd
 	rdbFlagSelectDB = 0xfe
@@ -167,6 +170,16 @@ func (d *decode) decode() error {
 				return err
 			}
 			d.event.Aux(auxKey, auxVal)
+		case rdbFlagResizeDB:
+			dbSize, _, err := d.readLength()
+			if err != nil {
+				return err
+			}
+			expiresSize, _, err := d.readLength()
+			if err != nil {
+				return err
+			}
+			d.event.ResizeDatabase(dbSize, expiresSize)
 		case rdbFlagExpiryMS:
 			_, err := io.ReadFull(d.r, d.intBuf)
 			if err != nil {
