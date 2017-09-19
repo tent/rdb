@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/cupcake/rdb/crc64"
+	"github.com/cquotient/rdb/crc64"
 )
 
 const Version = 6
