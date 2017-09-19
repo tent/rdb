@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.1
+  - 1.9
   - tip
 before_install:
   - go get gopkg.in/check.v1
