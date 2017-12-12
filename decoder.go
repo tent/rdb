@@ -106,6 +106,7 @@ const (
 	TypeSet    ValueType = 2
 	TypeZSet   ValueType = 3
 	TypeModule ValueType = 6
+	TypeZSet2  ValueType = 5
 	TypeHash   ValueType = 4
 
 	TypeHashZipmap    ValueType = 9
@@ -271,7 +272,7 @@ func (d *decode) readObject(key []byte, typ ValueType, expiry int64) error {
 			d.event.Sadd(key, member)
 		}
 		d.event.EndSet(key)
-	case TypeZSet:
+	case TypeZSet, TypeZSet2:
 		cardinality, _, err := d.readLength()
 		if err != nil {
 			return err
@@ -282,11 +283,19 @@ func (d *decode) readObject(key []byte, typ ValueType, expiry int64) error {
 			if err != nil {
 				return err
 			}
-			score, err := d.readFloat64()
-			if err != nil {
-				return err
+			if typ == TypeZSet2 {
+				score, err := d.readDouble64();
+				if err != nil {
+					return err
+				}
+				d.event.Zadd(key, score, member)
+			} else {
+				score, err := d.readFloat64();
+				if err != nil {
+					return err
+				}
+				d.event.Zadd(key, score, member)
 			}
-			d.event.Zadd(key, score, member)
 		}
 		d.event.EndZSet(key)
 	case TypeHash:
@@ -725,6 +734,15 @@ func (d *decode) readUint64Big() (uint64, error) {
 		return 0, err
 	}
 	return binary.BigEndian.Uint64(d.intBuf), nil
+}
+
+func (d *decode) readDouble64() (float64, error) {
+	_, err := io.ReadFull(d.r, d.intBuf)
+	if err != nil {
+		return 0, err
+	}
+	bits := binary.LittleEndian.Uint64(d.intBuf);
+	return float64(math.Float64frombits(bits)), nil;
 }
 
 // Doubles are saved as strings prefixed by an unsigned
