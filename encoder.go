@@ -77,7 +77,7 @@ func (e *Encoder) EncodeLength(l uint32) (err error) {
 		_, err = e.w.Write([]byte{byte(l>>8) | rdb14bitLen<<6, byte(l)})
 	default:
 		b := make([]byte, 5)
-		b[0] = rdb32bitLen << 6
+		b[0] = rdb32bitLen
 		binary.BigEndian.PutUint32(b[1:], l)
 		_, err = e.w.Write(b)
 	}
